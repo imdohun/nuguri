@@ -12,6 +12,7 @@
 #define MAX_STAGES 2
 #define MAX_ENEMIES 15 // 최대 적 개수 증가
 #define MAX_COINS 30   // 최대 코인 개수 증가
+#define MAX_LIVES 3 // 최대 목숨 지정
 
 // 구조체 정의
 typedef struct {
@@ -29,6 +30,8 @@ char map[MAX_STAGES][MAP_HEIGHT][MAP_WIDTH + 1];
 int player_x, player_y;
 int stage = 0;
 int score = 0;
+int lives = MAX_LIVES;
+int game_over = 0;
 
 // 플레이어 상태
 int is_jumping = 0;
@@ -65,10 +68,12 @@ int main() {
     enable_raw_mode();
     load_maps();
     init_stage();
-  
+
+    lives = MAX_LIVES;
+    game_over = 0;
+
 
     char c = '\0';
-    int game_over = 0;
 
     while (!game_over && stage < MAX_STAGES) {
         if (kbhit()) {
@@ -106,6 +111,12 @@ int main() {
                 printf("최종 점수: %d\n", score);
             }
         }
+    }
+
+    if(lives <= 0 && stage<MAX_STAGES){
+        printf("\x1b[2J\x1b[H");
+        printf("GAME OVER!\n");
+        printf("최종 점수: %d\n", score);
     }
 
     disable_raw_mode();
@@ -228,8 +239,8 @@ void init_stage() {
 
 // 게임 화면 그리기
 void draw_game() {
-    printf("\x1b[2J\x1b[H");
-    printf("Stage: %d | Score: %d\n", stage + 1, score);
+    printf("\x1b[2J\x1b[H");       //화면 클리어
+    printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
     printf("조작: ← → (이동), ↑ ↓ (사다리), Space (점프), q (종료)\n");
 
     char display_map[MAP_HEIGHT][MAP_WIDTH + 1];
@@ -345,8 +356,14 @@ void move_enemies() {
 void check_collisions() {
     for (int i = 0; i < enemy_count; i++) {
         if (player_x == enemies[i].x && player_y == enemies[i].y) {
+            lives--;
             score = (score > 50) ? score - 50 : 0;
-            init_stage();
+            
+            if(lives > 0){
+                init_stage();
+            }else if(lives <=0){
+                game_over = 1;
+            }
             return;
         }
     }
