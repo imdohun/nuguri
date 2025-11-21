@@ -55,6 +55,7 @@ void move_player(char input);
 void move_enemies();
 void check_collisions();
 int kbhit();
+void clear();
 
 int main() {
     srand(time(NULL));
@@ -96,7 +97,7 @@ int main() {
                 init_stage();
             } else {
                 game_over = 1;
-                printf("\x1b[2J\x1b[H");
+                printf("\x1b[2J\x1b[H");clear();
                 printf("축하합니다! 모든 스테이지를 클리어했습니다!\n");
                 printf("최종 점수: %d\n", score);
             }
@@ -317,4 +318,14 @@ int kbhit() {
         return 1;
     }
     return 0;
+}
+
+
+void clear(){
+    printf(" ██████╗██╗     ███████╗ █████╗ ██████╗ \n");
+    printf("██╔════╝██║     ██╔════╝██╔══██╗██╔══██╗\n");
+    printf("██║     ██║     █████╗  ███████║██████╔╝\n");
+    printf("██║     ██║     ██╔══╝  ██╔══██║██╔══██╗\n");
+    printf("╚██████╗███████╗███████╗██║  ██║██║  ██║\n");
+    printf(" ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝\n");
 }
