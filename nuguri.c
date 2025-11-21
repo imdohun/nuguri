@@ -228,8 +228,9 @@ void move_player(char input) {
         case ' ':
             if (!is_jumping && (floor_tile == '#' || on_ladder)) {
                 is_jumping = 1;
-                velocity_y = -2;
+                velocity_y = -3;
             }
+            if(on_ladder && map[stage][player_y-1][player_x]=='#') player_y-=1;
             break;
     }
 
@@ -244,7 +245,10 @@ void move_player(char input) {
     } 
     else {
         if (is_jumping) {
-            next_y = player_y + velocity_y;
+            if(velocity_y<0){
+            	next_y = player_y -1;}
+	        else{
+			    next_y=player_y+1;}
             if(next_y < 0) next_y = 0;
             velocity_y++;
 
