@@ -28,7 +28,7 @@ typedef struct {
 // 전역 변수
 char map[MAX_STAGES][MAP_HEIGHT][MAP_WIDTH + 1];
 int player_x, player_y;
-int stage = 0;
+int stage = 1;
 int score = 0;
 int lives = MAX_LIVES;
 int game_over = 0;
@@ -300,8 +300,9 @@ void move_player(char input) {
         case ' ':
             if (!is_jumping && (floor_tile == '#' || on_ladder)) {
                 is_jumping = 1;
-                velocity_y = -2;
+                velocity_y = -3;
             }
+            if(on_ladder && map[stage][player_y-1][player_x]=='#') player_y-=1;
             break;
     }
 
@@ -316,7 +317,12 @@ void move_player(char input) {
     } 
     else {
         if (is_jumping) {
-            next_y = player_y + velocity_y;
+            if(velocity_y<0){
+            	next_y = player_y -1;}
+	        else if(velocity_y == 0){
+                next_y = player_y;
+            }else{
+			    next_y=player_y+1;}
             if(next_y < 0) next_y = 0;
             velocity_y++;
 
