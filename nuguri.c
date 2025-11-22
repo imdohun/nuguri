@@ -237,7 +237,7 @@ void move_player(char input) {
         case ' ':
             if (!is_jumping && (floor_tile == '#' || on_ladder)) {
                 is_jumping = 1;
-                velocity_y = -1;
+                velocity_y = -2;
             }
             break;
     }
