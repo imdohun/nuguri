@@ -257,7 +257,9 @@ void move_player(char input) {
         if (is_jumping) {
             if(velocity_y<0){
             	next_y = player_y -1;}
-	        else{
+	        else if(velocity_y == 0){
+                next_y = player_y;
+            }else{
 			    next_y=player_y+1;}
             if(next_y < 0) next_y = 0;
             velocity_y++;
