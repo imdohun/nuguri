@@ -268,7 +268,7 @@ void move_player(char input) {
             if(next_y < 0) next_y = 0;
             velocity_y++;
 
-            if (velocity_y < 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] == '#') {
+            if (velocity_y <= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] == '#') {
                 velocity_y = 0;
             } else if (next_y < MAP_HEIGHT) {
                 player_y = next_y;
