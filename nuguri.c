@@ -1,10 +1,40 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <conio.h>
+#else
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
+
+#ifdef _WIN32
+
+void clrscr() {
+    system("cls");
+}
+
+void sleep_ms(int ms) {
+    Sleep(ms);
+}
+
+#else
+
+void clrscr() {
+    printf("\033[2J\033[1;1H");
+    fflush(stdout);
+}
+
+void sleep_ms(int ms) {
+    usleep(ms * 1000);
+}
+
+#endif
+
 
 // 맵 및 게임 요소 정의 (수정된 부분)
 #define MAP_WIDTH 40  // 맵 너비를 40으로 변경
@@ -45,7 +75,9 @@ Coin coins[MAX_COINS];
 int coin_count = 0;
 
 // 터미널 설정
+#ifndef _WIN32
 struct termios orig_termios;
+#endif
 
 // 함수 선언
 void disable_raw_mode();
@@ -119,13 +151,18 @@ int main() {
 
 
 // 터미널 Raw 모드 활성화/비활성화
-void disable_raw_mode() { tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios); }
+void disable_raw_mode() {
+#ifndef _WIN32
+tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+#endif }
 void enable_raw_mode() {
+#ifndef _WIN32
     tcgetattr(STDIN_FILENO, &orig_termios);
     atexit(disable_raw_mode);
     struct termios raw = orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+#endif
 }
 
 // 맵 파일 로드
@@ -316,6 +353,7 @@ void check_collisions() {
 
 // 비동기 키보드 입력 확인
 int kbhit() {
+
     struct termios oldt, newt;
     int ch;
     int oldf;
