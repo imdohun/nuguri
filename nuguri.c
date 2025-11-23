@@ -270,6 +270,8 @@ void move_player(char input) {
 
             if (velocity_y <= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] == '#') {
                 velocity_y = 0;
+            } else if (velocity_y>0&&map[stage][next_y][player_x]=='#'){
+                player_y;
             } else if (next_y < MAP_HEIGHT) {
                 player_y = next_y;
             }
