@@ -236,7 +236,7 @@ void move_player(char input) {
         case 'w': if (on_ladder) next_y--; break;
         case 's': if (on_ladder && (player_y + 1 < MAP_HEIGHT) && map[stage][player_y + 1][player_x] != '#') next_y++; break;
         case ' ':
-            if (!is_jumping && (floor_tile == '#' || on_ladder)) {
+            if (!is_jumping && (floor_tile == '#')) {
                 is_jumping = 1;
                 velocity_y = -3;
                 
@@ -244,7 +244,7 @@ void move_player(char input) {
                 while (kbhit() && (ch = getchar()) == ' ') { }
                 if (ch != EOF && ch != ' ') ungetc(ch, stdin);
             }
-            if(on_ladder && map[stage][player_y-1][player_x]=='#') player_y-=1;
+            if(on_ladder && map[stage][player_y-1][player_x]=='#'&&!(is_jumping)) player_y-=2;
             break;
     }
 
