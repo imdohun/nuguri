@@ -58,15 +58,22 @@ void move_player(char input);
 void move_enemies();
 void check_collisions();
 int kbhit();
+void title_menu();
 void clear();
 
+
 int main() {
+
+    title_menu();
+
     srand(time(NULL));
     enable_raw_mode();
     load_maps();
     init_stage();
+
     lives = MAX_LIVES;
     game_over = 0;
+
 
     char c = '\0';
 
@@ -116,6 +123,55 @@ int main() {
 
     disable_raw_mode();
     return 0;
+}
+
+// 시작 메뉴
+#ifdef _WIN32
+void clrscr(void)
+{
+  system("cls"); 
+}
+#else
+void clrscr()
+{                             
+  printf("\033[2J\033[1;1H"); 
+  fflush(stdout);             
+}
+#endif
+
+void title_menu() {
+    int a;
+    while(1) {
+        clrscr();
+
+        printf("\n\n\n\n\n");
+        printf("           NN   NN  UU     UU   GGGGGG   UU     UU  RRRRRRR    IIIII         \n");
+        printf("           NNN  NN  UU     UU  GG        UU     UU  RR    RR    III          \n");
+        printf("           NN N NN  UU     UU  GG   GGG  UU     UU  RRRRRRR     III          \n");
+        printf("           NN  NNN  UUU   UUU  GG    GG  UUU   UUU  RR   RR     III          \n");
+        printf("           NN   NN   UUUUUUU    GGGGGG    UUUUUUU   RR    RR   IIIII         \n\n");
+        printf("                                 1. START_GAME                               \n\n");
+        printf("                                  2. END_GAME                                \n\n");
+        printf("            Press Input Number : ");
+        if (scanf("%d", &a) != 1)  {
+            while (getchar() != '\n');
+            printf("\n            Input A Number");
+            getchar();
+            continue;
+        }
+
+        if (a == 1) {
+            break;
+        } else if (a == 2) {
+            exit(0);
+        } else {
+            while (getchar() != '\n');           
+            printf("\n            Input '1' or '2'");            
+            getchar();
+            continue;
+        }
+    }
+    return;
 }
 
 
@@ -243,6 +299,7 @@ void move_player(char input) {
                 int ch;
                 while (kbhit() && (ch = getchar()) == ' ') { }
                 if (ch != EOF && ch != ' ') ungetc(ch, stdin);
+
             }
             if(on_ladder && map[stage][player_y-1][player_x]=='#'&&!(is_jumping)) player_y-=2;
             break;
