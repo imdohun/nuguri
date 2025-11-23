@@ -295,6 +295,11 @@ void move_player(char input) {
             if (!is_jumping && (floor_tile == '#' || on_ladder)) {
                 is_jumping = 1;
                 velocity_y = -3;
+                
+                int ch;
+                while (kbhit() && (ch = getchar()) == ' ') { }
+                if (ch != EOF && ch != ' ') ungetc(ch, stdin);
+
             }
             if(on_ladder && map[stage][player_y-1][player_x]=='#') player_y-=1;
             break;
