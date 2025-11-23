@@ -28,7 +28,7 @@ typedef struct {
 // 전역 변수
 char map[MAX_STAGES][MAP_HEIGHT][MAP_WIDTH + 1];
 int player_x, player_y;
-int stage = 1;
+int stage = 0;
 int score = 0;
 int lives = MAX_LIVES;
 int game_over = 0;
@@ -125,12 +125,6 @@ int main() {
     return 0;
 }
 
-//  NN   NN  UU     UU   GGGGGG   UU     UU  RRRRRRR    IIIII
-//  NNN  NN  UU     UU  GG        UU     UU  RR    RR    III
-//  NN N NN  UU     UU  GG   GGG  UU     UU  RRRRRRR     III
-//  NN  NNN  UUU   UUU  GG    GG  UUU   UUU  RR   RR     III
-//  NN   NN   UUUUUUU    GGGGGG    UUUUUUU   RR    RR   IIIII
-//
 // 시작 메뉴
 #ifdef _WIN32
 void clrscr(void)
