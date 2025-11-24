@@ -93,6 +93,7 @@ int main() {
                     case 'D': c = 'a'; break; // Left
                 }
             }
+            while (kbhit()) getchar();
         } else {
             c = '\0';
         }
@@ -285,7 +286,7 @@ void move_player(char input) {
     char current_tile = map[stage][player_y][player_x];
 
     on_ladder = (current_tile == 'H');
-
+    
     switch (input) {
         case 'a': next_x--; break;
         case 'd': next_x++; break;
@@ -295,11 +296,6 @@ void move_player(char input) {
             if (!is_jumping && (floor_tile == '#')) {
                 is_jumping = 1;
                 velocity_y = -3;
-                
-                int ch;
-                while (kbhit() && (ch = getchar()) == ' ') { }
-                if (ch != EOF && ch != ' ') ungetc(ch, stdin);
-
             }
             if(on_ladder && map[stage][player_y-1][player_x]=='#'&&!(is_jumping)) player_y-=2;
             break;
