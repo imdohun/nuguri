@@ -306,8 +306,6 @@ void move_player(char input) {
     if (on_ladder && (input == 'w' || input == 's')) {
         if(next_y >= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] != '#') {
             player_y = next_y;
-            is_jumping = 0;
-            velocity_y = 0;
         }
     } 
     else {
@@ -349,6 +347,11 @@ void move_player(char input) {
 void move_enemies() {
     for (int i = 0; i < enemy_count; i++) {
         int next_x = enemies[i].x + enemies[i].dir;
+
+        //X가 공중( )에 떠있을 경우 바닥(x)으로 내려오기
+        while(map[stage][enemies[i].y+1][enemies[i].x] == ' '){
+            enemies[i].y+=1;
+        }
         if (next_x < 0 || next_x >= MAP_WIDTH || map[stage][enemies[i].y][next_x] == '#' || (enemies[i].y + 1 < MAP_HEIGHT && map[stage][enemies[i].y + 1][next_x] == ' ')) {
             enemies[i].dir *= -1;
         } else {
