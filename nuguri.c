@@ -313,19 +313,24 @@ void move_player(char input) {
     else {
         if (is_jumping) {
             if(velocity_y<0){
-            	next_y = player_y -1;}
+            	next_y = player_y -1;
+            }
 	        else if(velocity_y == 0){
                 next_y = player_y;
-            }else{
+            }
+            else{
 			    next_y=player_y+1;}
+
             if(next_y < 0) next_y = 0;
             velocity_y++;
 
             if (velocity_y <= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] == '#') {
                 velocity_y = 0;
-            } else if (velocity_y>0&&map[stage][next_y][player_x]=='#'){
+            } 
+            else if (velocity_y>0&&map[stage][next_y][player_x]=='#'){
                 player_y;
-            } else if (next_y < MAP_HEIGHT) {
+            } 
+            else if (next_y < MAP_HEIGHT) {
                 player_y = next_y;
             }
             
