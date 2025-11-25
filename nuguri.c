@@ -282,22 +282,27 @@ void update_game(char input) {
 // 플레이어 이동 로직
 void move_player(char input) {
     int next_x = player_x, next_y = player_y;
-    char floor_tile = (player_y + 1 < MAP_HEIGHT) ? map[stage][player_y + 1][player_x] : '#';
+    char floor_tile = (player_y + 1 < MAP_HEIGHT) ? map[stage][player_y + 1][player_x] : ' ';
     char current_tile = map[stage][player_y][player_x];
 
     on_ladder = (current_tile == 'H');
-    
+
     switch (input) {
         case 'a': next_x--; break;
         case 'd': next_x++; break;
         case 'w': if (on_ladder) next_y--; break;
         case 's': if (on_ladder && (player_y + 1 < MAP_HEIGHT) && map[stage][player_y + 1][player_x] != '#') next_y++; break;
         case ' ':
-            if (!is_jumping && (floor_tile == '#')) {
+            if (!is_jumping && (floor_tile == '#' || on_ladder)) {
                 is_jumping = 1;
                 velocity_y = -3;
+                
+                int ch;
+                while (kbhit() && (ch = getchar()) == ' ') { }
+                if (ch != EOF && ch != ' ') ungetc(ch, stdin);
+
             }
-            if(on_ladder && map[stage][player_y-1][player_x]=='#'&&!(is_jumping)) player_y-=2;
+            if(on_ladder && map[stage][player_y-1][player_x]=='#') player_y-=1;
             break;
     }
 
@@ -323,8 +328,6 @@ void move_player(char input) {
 
             if (velocity_y <= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] == '#') {
                 velocity_y = 0;
-            } else if (velocity_y>0&&map[stage][next_y][player_x]=='#'){
-                player_y;
             } else if (next_y < MAP_HEIGHT) {
                 player_y = next_y;
             }
@@ -333,17 +336,23 @@ void move_player(char input) {
                 is_jumping = 0;
                 velocity_y = 0;
             }
+
+            if (player_y + 1 >= MAP_HEIGHT) player_y++;
+            
         } else {
             if (floor_tile != '#' && floor_tile != 'H') {
                  if (player_y + 1 < MAP_HEIGHT) player_y++;
-                 else init_stage();
+                 else  player_y++;
             }
         }
+        
     }
-    
-    if (player_y >= MAP_HEIGHT) init_stage();
-}
 
+    if (player_y >= MAP_HEIGHT) {
+        init_stage();
+        lives--;
+    }
+}
 
 // 적 이동 로직
 void move_enemies() {
