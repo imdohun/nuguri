@@ -282,7 +282,7 @@ void update_game(char input) {
 // 플레이어 이동 로직
 void move_player(char input) {
     int next_x = player_x, next_y = player_y;
-    char floor_tile = (player_y + 1 < MAP_HEIGHT) ? map[stage][player_y + 1][player_x] : '#';
+    char floor_tile = (player_y + 1 < MAP_HEIGHT) ? map[stage][player_y + 1][player_x] : ' ';
     char current_tile = map[stage][player_y][player_x];
 
     on_ladder = (current_tile == 'H');
@@ -333,15 +333,21 @@ void move_player(char input) {
                 is_jumping = 0;
                 velocity_y = 0;
             }
+
+            if (player_y + 1 >= MAP_HEIGHT) player_y++;
+
         } else {
             if (floor_tile != '#' && floor_tile != 'H') {
                  if (player_y + 1 < MAP_HEIGHT) player_y++;
-                 else init_stage();
+                 else  player_y++;
             }
         }
     }
     
-    if (player_y >= MAP_HEIGHT) init_stage();
+    if (player_y >= MAP_HEIGHT) {
+        init_stage();
+        lives--;
+    }
 }
 
 
