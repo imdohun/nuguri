@@ -13,28 +13,14 @@
 #include <time.h>
 
 #ifdef _WIN32
-
-void clrscr() {
-    system("cls");
-}
-
 void sleep_ms(int ms) {
     Sleep(ms);
 }
-
 #else
-
-void clrscr() {
-    printf("\033[2J\033[1;1H");
-    fflush(stdout);
-}
-
 void sleep_ms(int ms) {
     usleep(ms * 1000);
 }
-
 #endif
-
 
 // 맵 및 게임 요소 정의 (수정된 부분)
 #define MAP_WIDTH 40  // 맵 너비를 40으로 변경
@@ -90,19 +76,47 @@ void move_player(char input);
 void move_enemies();
 void check_collisions();
 int kbhit();
+void title_menu();
+void clear();
+
 
 int main() {
+
+    title_menu();
+
     srand(time(NULL));
     enable_raw_mode();
     load_maps();
     init_stage();
+
     lives = MAX_LIVES;
     game_over = 0;
+
 
     char c = '\0';
 
     while (!game_over && stage < MAX_STAGES) {
         if (kbhit()) {
+            #ifdef _WIN32
+            c = getch();
+            if (c == 113) {
+                game_over = 1;
+                continue;
+            }
+
+            if(c == 0 || c == 224) {
+                switch(getch()) {
+                    case 72 : c = 'w'; 
+                    break;
+                    case 75 : c = 'a';
+                    break;
+                    case 77 : c = 'd';
+                    break;
+                    case 80 : c = 's';
+                    break;
+                }
+            }
+            #else
             c = getchar();
             if (c == 'q') {
                 game_over = 1;
@@ -117,13 +131,15 @@ int main() {
                     case 'D': c = 'a'; break; // Left
                 }
             }
+            while (kbhit()) getchar();
+            #endif
         } else {
             c = '\0';
         }
 
         update_game(c);
         draw_game();
-        usleep(90000);
+        sleep_ms(90);
 
         if (map[stage][player_y][player_x] == 'E') {
             stage++;
@@ -132,7 +148,7 @@ int main() {
                 init_stage();
             } else {
                 game_over = 1;
-                printf("\x1b[2J\x1b[H");
+                printf("\x1b[2J\x1b[H");clear();
                 printf("축하합니다! 모든 스테이지를 클리어했습니다!\n");
                 printf("최종 점수: %d\n", score);
             }
@@ -149,12 +165,63 @@ int main() {
     return 0;
 }
 
+// 시작 메뉴
+#ifdef _WIN32
+void clrscr(void)
+{
+  system("cls"); 
+}
+#else
+void clrscr()
+{                             
+  printf("\033[2J\033[1;1H"); 
+  fflush(stdout);             
+}
+#endif
+
+void title_menu() {
+    int a;
+    while(1) {
+        clrscr();
+
+        printf("\n\n\n\n\n");
+        printf("           NN   NN  UU     UU   GGGGGG   UU     UU  RRRRRRR    IIIII         \n");
+        printf("           NNN  NN  UU     UU  GG        UU     UU  RR    RR    III          \n");
+        printf("           NN N NN  UU     UU  GG   GGG  UU     UU  RRRRRRR     III          \n");
+        printf("           NN  NNN  UUU   UUU  GG    GG  UUU   UUU  RR   RR     III          \n");
+        printf("           NN   NN   UUUUUUU    GGGGGG    UUUUUUU   RR    RR   IIIII         \n\n");
+        printf("                                 1. START_GAME                               \n\n");
+        printf("                                  2. END_GAME                                \n\n");
+        printf("            Press Input Number : ");
+        if (scanf("%d", &a) != 1)  {
+            while (getchar() != '\n');
+            printf("\n            Input A Number");
+            getchar();
+            continue;
+        }
+
+        if (a == 1) {
+            break;
+        } else if (a == 2) {
+            exit(0);
+        } else {
+            while (getchar() != '\n');           
+            printf("\n            Input '1' or '2'");            
+            getchar();
+            continue;
+        }
+    }
+    return;
+}
+
 
 // 터미널 Raw 모드 활성화/비활성화
-void disable_raw_mode() {
+void disable_raw_mode() { 
 #ifndef _WIN32
-tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-#endif }
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+#endif
+
+}
 void enable_raw_mode() {
 #ifndef _WIN32
     tcgetattr(STDIN_FILENO, &orig_termios);
@@ -265,17 +332,18 @@ void move_player(char input) {
     char current_tile = map[stage][player_y][player_x];
 
     on_ladder = (current_tile == 'H');
-
+    
     switch (input) {
         case 'a': next_x--; break;
         case 'd': next_x++; break;
         case 'w': if (on_ladder) next_y--; break;
         case 's': if (on_ladder && (player_y + 1 < MAP_HEIGHT) && map[stage][player_y + 1][player_x] != '#') next_y++; break;
         case ' ':
-            if (!is_jumping && (floor_tile == '#' || on_ladder)) {
+            if (!is_jumping && (floor_tile == '#')) {
                 is_jumping = 1;
-                velocity_y = -2;
+                velocity_y = -3;
             }
+            if(on_ladder && map[stage][player_y-1][player_x]=='#'&&!(is_jumping)) player_y-=2;
             break;
     }
 
@@ -290,12 +358,19 @@ void move_player(char input) {
     } 
     else {
         if (is_jumping) {
-            next_y = player_y + velocity_y;
+            if(velocity_y<0){
+            	next_y = player_y -1;}
+	        else if(velocity_y == 0){
+                next_y = player_y;
+            }else{
+			    next_y=player_y+1;}
             if(next_y < 0) next_y = 0;
             velocity_y++;
 
-            if (velocity_y < 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] == '#') {
+            if (velocity_y <= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] == '#') {
                 velocity_y = 0;
+            } else if (velocity_y>0&&map[stage][next_y][player_x]=='#'){
+                player_y;
             } else if (next_y < MAP_HEIGHT) {
                 player_y = next_y;
             }
@@ -353,7 +428,9 @@ void check_collisions() {
 
 // 비동기 키보드 입력 확인
 int kbhit() {
-
+    #ifdef _WIN32
+    return _kbhit();
+    #else
     struct termios oldt, newt;
     int ch;
     int oldf;
@@ -371,4 +448,15 @@ int kbhit() {
         return 1;
     }
     return 0;
+    #endif
+}
+
+
+void clear(){
+    printf(" ██████╗██╗     ███████╗ █████╗ ██████╗ \n");
+    printf("██╔════╝██║     ██╔════╝██╔══██╗██╔══██╗\n");
+    printf("██║     ██║     █████╗  ███████║██████╔╝\n");
+    printf("██║     ██║     ██╔══╝  ██╔══██║██╔══██╗\n");
+    printf("╚██████╗███████╗███████╗██║  ██║██║  ██║\n");
+    printf(" ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝\n");
 }
