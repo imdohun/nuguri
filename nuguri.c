@@ -14,9 +14,9 @@
 #endif
 
 // 맵 및 게임 요소 정의 (수정된 부분)
-#define MAP_WIDTH 40  // 맵 너비를 40으로 변경
-#define MAP_HEIGHT 20
-#define MAX_STAGES 2
+//#define MAP_WIDTH 40  // 맵 너비를 40으로 변경
+//#define MAP_HEIGHT 20
+//#define MAX_STAGES 2
 #define MAX_ENEMIES 15 // 최대 적 개수 증가
 #define MAX_COINS 30   // 최대 코인 개수 증가
 #define MAX_LIVES 3 // 최대 목숨 지정
@@ -33,12 +33,18 @@ typedef struct {
 } Coin;
 
 // 전역 변수
-char map[MAX_STAGES][MAP_HEIGHT][MAP_WIDTH + 1];
+//char map[MAX_STAGES][MAP_HEIGHT][MAP_WIDTH + 1];
+char ***map;
+int MAP_HEIGHT = 0;
+int MAP_WIDTH = 0;
+int MAX_STAGES = 2;
 int player_x, player_y;
 int stage = 0;
 int score = 0;
 int lives = MAX_LIVES;
 int game_over = 0;
+//file pointer save
+long y_start =0;
 
 // 플레이어 상태
 int is_jumping = 0;
@@ -70,7 +76,9 @@ int kbhit();
 void title_menu();
 void clear();
 void sound();
-
+//size calc
+void calc_map_x_size(FILE *file);
+void calc_map_y_size(FILE *file);
 
 #ifdef _WIN32
 void clrscr(void)
@@ -190,6 +198,7 @@ int main() {
             score += 100;
             if (stage < MAX_STAGES) {
                 init_stage();
+                load_maps();
             } else {
                 game_over = 1;
     #ifdef _WIN32
@@ -266,7 +275,7 @@ void enable_raw_mode(){
     struct termios raw = orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-    #endif
+    
 }
 #else
 void disable_raw_mode(){ }
@@ -280,6 +289,17 @@ void load_maps() {
         perror("map.txt 파일을 열 수 없습니다.");
         exit(1);
     }
+    calc_map_x_size(file);
+    calc_map_y_size(file);
+    map = (char ***)malloc(sizeof(char **) * MAX_STAGES);
+    for (int s = 0; s < MAX_STAGES; s++) {
+        map[s] = (char **)malloc(sizeof(char *) * MAP_HEIGHT);
+
+        for (int r = 0; r < MAP_HEIGHT; r++) {
+            map[s][r] = (char *)malloc(sizeof(char) * (MAP_WIDTH + 1));
+        }
+    }
+
     int s = 0, r = 0;
     char line[MAP_WIDTH + 2]; // 버퍼 크기는 MAP_WIDTH에 따라 자동 조절됨
     while (s < MAX_STAGES && fgets(line, sizeof(line), file)) {
@@ -295,6 +315,50 @@ void load_maps() {
         }
     }
     fclose(file);
+}
+
+void calc_map_x_size(FILE *file){
+    int size = 0;
+
+    //y_start가 스테이지 끝나는 곳을 나타내므로 사용
+    fseek(file,y_start,SEEK_SET);
+	//1칸만큼 읽어서 #이 아닐때까지 size+1
+	while (1) {
+        int ch = fgetc(file);
+        if (ch == '\n' || ch == '\r' || ch == EOF) break;
+            size++;
+        }
+
+	//파일 포인터 위치 초기화
+	rewind(file);
+	
+	//전역변수에 값 적용
+	MAP_WIDTH = size;
+	return;
+    }
+
+void calc_map_y_size(FILE *file){
+    int size = 0;
+    char buf[1024];
+    //y_start 처음엔 0, 다음엔 스테이지 시작점
+    fseek(file,y_start,SEEK_SET);
+	//1024개 만큼 문자를 읽어와서 
+	while (fgets(buf, sizeof(buf), file) != NULL) {
+        //첫번째값 비교
+        if (buf[0] == '\n') {
+            break;  // 빈 줄 만나면 루프 종료
+        }
+        size++;
+    }
+
+    //다음 포인터(stage) 시작지점 save
+	y_start = ftell(file);
+	//파일 포인터 위치 초기화
+	rewind(file);
+	
+	//전역변수에 값 적용(map height+1은 임시처리)
+	MAP_HEIGHT = size;
+	return;
 }
 
 
