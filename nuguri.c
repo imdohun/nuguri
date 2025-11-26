@@ -459,3 +459,13 @@ void clear(){
     printf("╚██████╗███████╗███████╗██║  ██║██║  ██║\n");
     printf(" ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝\n");
 }
+
+void sound(){
+    #ifdef _WIN32
+        Beep(1000, 25);
+        Beep(1500, 35);
+    #else
+        system("speaker-test -t sine -f 1200 -l 1 >/dev/null 2>&1 &");
+        fflush(stdout);
+    #endif
+}
