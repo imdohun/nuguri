@@ -33,6 +33,8 @@ int game_over = 0;
 int MAP_HEIGHT = 0;
 int MAP_WIDTH = 0;
 int MAX_STAGES = 2;
+//file pointer save
+long y_start =0;
 
 // 플레이어 상태
 int is_jumping = 0;
@@ -71,7 +73,8 @@ int main() {
     init_stage();
     lives = MAX_LIVES;
     game_over = 0;
-
+    
+    printf("long: %ld",y_start);
     char c = '\0';
 
     while (!game_over && stage < MAX_STAGES) {
@@ -102,7 +105,30 @@ int main() {
         if (map[stage][player_y][player_x] == 'E') {
             stage++;
             score += 100;
+            printf("before file open");
             if (stage < MAX_STAGES) {
+                load_maps();
+                //다음스테이지 맵 크기 지정
+                /**
+                printf("file opend");
+                FILE *file = fopen("map2.txt", "r");
+                printf("file opend");
+                if (!file) {
+                    perror("map.txt 파일을 열 수 없습니다.");
+                    exit(1);
+                    }
+                calc_map_x_size(file);
+                calc_map_y_size(file);
+                fclose(file);
+                map = (char ***)malloc(sizeof(char **) * MAX_STAGES);
+                for (int s = 0; s < MAX_STAGES; s++) {
+                    map[s] = (char **)malloc(sizeof(char *) * MAP_HEIGHT);
+
+                    for (int r = 0; r < MAP_HEIGHT; r++) {
+                            map[s][r] = (char *)malloc(sizeof(char) * (MAP_WIDTH + 1));
+                        }
+                }
+                */
                 init_stage();
             } else {
                 game_over = 1;
@@ -136,7 +162,7 @@ void enable_raw_mode() {
 
 // 맵 파일 로드
 void load_maps() {
-    FILE *file = fopen("map2.txt", "r");
+    FILE *file = fopen("map.txt", "r");
     if (!file) {
         perror("map.txt 파일을 열 수 없습니다.");
         exit(1);
@@ -172,12 +198,15 @@ void load_maps() {
 void calc_map_x_size(FILE *file){
     int size = 0;
 
+    //y_start가 스테이지 끝나는 곳을 나타내므로 사용
+    fseek(file,y_start,SEEK_SET);
 	//1칸만큼 읽어서 #이 아닐때까지 size+1
 	while (1) {
         int ch = fgetc(file);
         if (ch == '\n' || ch == '\r' || ch == EOF) break;
             size++;
         }
+
 	//파일 포인터 위치 초기화
 	rewind(file);
 	
@@ -189,6 +218,8 @@ void calc_map_x_size(FILE *file){
 void calc_map_y_size(FILE *file){
     int size = 0;
     char buf[1024];
+    //y_start 처음엔 0, 다음엔 스테이지 시작점
+    fseek(file,y_start,SEEK_SET);
 	//1024개 만큼 문자를 읽어와서 
 	while (fgets(buf, sizeof(buf), file) != NULL) {
         //첫번째값 비교
@@ -197,11 +228,13 @@ void calc_map_y_size(FILE *file){
         }
         size++;
     }
-	
+
+    //다음 포인터(stage) 시작지점 save
+	y_start = ftell(file);
 	//파일 포인터 위치 초기화
 	rewind(file);
 	
-	//전역변수에 값 적용()
+	//전역변수에 값 적용(map height+1은 임시처리)
 	MAP_HEIGHT = size+1;
 	return;
 }
