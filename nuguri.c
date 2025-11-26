@@ -6,6 +6,10 @@
 #include <fcntl.h>
 #include <time.h>
 
+#ifdef _WIN32
+#include <windows.h>   
+#endif
+
 // 맵 및 게임 요소 정의 (수정된 부분)
 #define MAP_WIDTH 40  // 맵 너비를 40으로 변경
 #define MAP_HEIGHT 20
@@ -60,6 +64,7 @@ void check_collisions();
 int kbhit();
 void title_menu();
 void clear();
+void sound();
 
 
 int main() {
@@ -296,6 +301,7 @@ void move_player(char input) {
             if (!is_jumping && (floor_tile == '#' || on_ladder)) {
                 is_jumping = 1;
                 velocity_y = -3;
+                sound();
             }
             if(on_ladder && map[stage][player_y-1][player_x]=='#') player_y-=1;
             break;
@@ -421,4 +427,14 @@ void clear(){
     printf("██║     ██║     ██╔══╝  ██╔══██║██╔══██╗\n");
     printf("╚██████╗███████╗███████╗██║  ██║██║  ██║\n");
     printf(" ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝\n");
+}
+
+void sound(){
+    #ifdef _WIN32
+        Beep(1000, 25);
+        Beep(1500, 35);
+    #else
+        system("speaker-test -t sine -f 1200 -l 1 >/dev/null 2>&1 &");
+        fflush(stdout);
+    #endif
 }
