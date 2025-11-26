@@ -331,15 +331,13 @@ void move_player(char input) {
 
             if (velocity_y <= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] == '#') {
                 velocity_y = 0;
-<<<<<<< HEAD
+
             } 
             else if (velocity_y>0&&map[stage][next_y][player_x]=='#'){
                 player_y;
             } 
             else if (next_y < MAP_HEIGHT) {
-=======
-            }  else if (next_y < MAP_HEIGHT) {
->>>>>>> origin/geunhwan
+
                 player_y = next_y;
             }
             
@@ -353,7 +351,7 @@ void move_player(char input) {
         } else {
             if (floor_tile != '#' && floor_tile != 'H') {
                  if (player_y + 1 < MAP_HEIGHT) player_y++;
-                 else  player_y++;
+                 else  init_stage();
             }
         }
         
