@@ -347,16 +347,15 @@ void move_player(char input) {
             }
 
             if (player_y + 1 >= MAP_HEIGHT) player_y++;
-            
+
         } else {
             if (floor_tile != '#' && floor_tile != 'H') {
                  if (player_y + 1 < MAP_HEIGHT) player_y++;
-                 else  init_stage();
+                 else  player_y++;
             }
         }
         
     }
-
     if (player_y >= MAP_HEIGHT) {
         init_stage();
         lives--;
