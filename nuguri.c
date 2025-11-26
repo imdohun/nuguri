@@ -216,20 +216,19 @@ void title_menu() {
 
 
 // 터미널 Raw 모드 활성화/비활성화
-void disable_raw_mode() { 
-#ifndef _WIN32
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-#endif
-
-}
+void disable_raw_mode() {
+    #ifndef _WIN32
+     tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+    #endif
+ }
 void enable_raw_mode() {
-#ifndef _WIN32
+    #ifndef _WIN32
     tcgetattr(STDIN_FILENO, &orig_termios);
     atexit(disable_raw_mode);
     struct termios raw = orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-#endif
+    #endif
 }
 
 // 맵 파일 로드
