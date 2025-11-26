@@ -64,6 +64,7 @@ int coin_count = 0;
 #ifndef _WIN32
 struct termios orig_termios;
 #endif
+#endif
 
 // 함수 선언
 void disable_raw_mode();
@@ -78,9 +79,28 @@ void check_collisions();
 int kbhit();
 void title_menu();
 void clear();
+void sound();
 
+
+#ifdef _WIN32
+void clrscr(void)
+{
+  system("cls"); 
+}
+#else
+void clrscr()
+{                             
+  printf("\033[2J\033[1;1H"); 
+  fflush(stdout);             
+}
+#endif
 
 int main() {
+#ifdef _WIN32
+    setlocale(LC_ALL, ".UTF8");               
+    system("chcp 65001 > nul");                 
+   
+#endif
 
     title_menu();
 
@@ -96,6 +116,36 @@ int main() {
     char c = '\0';
 
     while (!game_over && stage < MAX_STAGES) {
+        
+#ifdef _WIN32
+        if (kbhit()) {
+            c = (char)_getch();
+
+            if (c == 'q' || c == 'Q') {
+                game_over = 1;
+                continue;
+            }
+
+            // 방향키 처리 (0 또는 0xE0 후에 코드 들어옴)
+            if (c == 0 || c == (char)0xE0) {
+                int code = _getch();
+                switch (code) {
+                    case 72: c = 'w'; break; // Up
+                    case 80: c = 's'; break; // Down
+                    case 77: c = 'd'; break; // Right
+                    case 75: c = 'a'; break; // Left
+                    default: c = '\0'; break;
+                }
+            }
+
+            // 버퍼에 남아 있는 추가 키 버리기
+            while (kbhit()) _getch();
+
+        } else {
+            c = '\0';
+        }
+#else
+
         if (kbhit()) {
             #ifdef _WIN32
             c = _getch();
@@ -136,7 +186,7 @@ int main() {
         } else {
             c = '\0';
         }
-
+#endif
         update_game(c);
         draw_game();
         sleep_ms(90);
@@ -148,7 +198,12 @@ int main() {
                 init_stage();
             } else {
                 game_over = 1;
-                printf("\x1b[2J\x1b[H");clear();
+    #ifdef _WIN32
+                clrscr();
+    #else
+                 printf("\x1b[2J\x1b[H");
+    #endif
+                clear();
                 printf("축하합니다! 모든 스테이지를 클리어했습니다!\n");
                 printf("최종 점수: %d\n", score);
             }
@@ -156,7 +211,11 @@ int main() {
     }
 
     if(lives <= 0 && stage<MAX_STAGES){
+#ifdef _WIN32
+        clrscr();
+#else
         printf("\x1b[2J\x1b[H");
+#endif
         printf("GAME OVER!\n");
         printf("최종 점수: %d\n", score);
     }
@@ -164,20 +223,6 @@ int main() {
     disable_raw_mode();
     return 0;
 }
-
-// 시작 메뉴
-#ifdef _WIN32
-void clrscr(void)
-{
-  system("cls"); 
-}
-#else
-void clrscr()
-{                             
-  printf("\033[2J\033[1;1H"); 
-  fflush(stdout);             
-}
-#endif
 
 void title_menu() {
     int a;
@@ -230,6 +275,10 @@ void enable_raw_mode() {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
     #endif
 }
+#else
+void disable_raw_mode(){ }
+void enable_raw_mode(){ }
+#endif
 
 // 맵 파일 로드
 void load_maps() {
@@ -281,7 +330,11 @@ void init_stage() {
 
 // 게임 화면 그리기
 void draw_game() {
+#ifdef _WIN32
+    clrscr();
+#else
     printf("\x1b[2J\x1b[H");       //화면 클리어
+#endif
     printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
     printf("조작: ← → (이동), ↑ ↓ (사다리), Space (점프), q (종료)\n");
 
@@ -327,22 +380,23 @@ void update_game(char input) {
 // 플레이어 이동 로직
 void move_player(char input) {
     int next_x = player_x, next_y = player_y;
-    char floor_tile = (player_y + 1 < MAP_HEIGHT) ? map[stage][player_y + 1][player_x] : '#';
+    char floor_tile = (player_y + 1 < MAP_HEIGHT) ? map[stage][player_y + 1][player_x] : ' ';
     char current_tile = map[stage][player_y][player_x];
 
     on_ladder = (current_tile == 'H');
-    
+
     switch (input) {
         case 'a': next_x--; break;
         case 'd': next_x++; break;
         case 'w': if (on_ladder) next_y--; break;
         case 's': if (on_ladder && (player_y + 1 < MAP_HEIGHT) && map[stage][player_y + 1][player_x] != '#') next_y++; break;
         case ' ':
-            if (!is_jumping && (floor_tile == '#')) {
+            if (!is_jumping && (floor_tile == '#' || on_ladder)) {
                 is_jumping = 1;
                 velocity_y = -3;
             }
-            if(on_ladder && map[stage][player_y-1][player_x]=='#'&&!(is_jumping)) player_y-=2;
+            sound();
+            if(on_ladder && map[stage][player_y-1][player_x]=='#') player_y-=1;
             break;
     }
 
@@ -358,19 +412,26 @@ void move_player(char input) {
     else {
         if (is_jumping) {
             if(velocity_y<0){
-            	next_y = player_y -1;}
+            	next_y = player_y -1;
+            }
 	        else if(velocity_y == 0){
                 next_y = player_y;
-            }else{
+            }
+            else{
 			    next_y=player_y+1;}
+
             if(next_y < 0) next_y = 0;
             velocity_y++;
 
             if (velocity_y <= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] == '#') {
                 velocity_y = 0;
-            } else if (velocity_y>0&&map[stage][next_y][player_x]=='#'){
+
+            } 
+            else if (velocity_y>0&&map[stage][next_y][player_x]=='#'){
                 player_y;
-            } else if (next_y < MAP_HEIGHT) {
+            } 
+            else if (next_y < MAP_HEIGHT) {
+
                 player_y = next_y;
             }
             
@@ -378,17 +439,22 @@ void move_player(char input) {
                 is_jumping = 0;
                 velocity_y = 0;
             }
+
+            if (player_y + 1 >= MAP_HEIGHT) player_y++;
+
         } else {
             if (floor_tile != '#' && floor_tile != 'H') {
                  if (player_y + 1 < MAP_HEIGHT) player_y++;
-                 else init_stage();
+                 else  player_y++;
             }
         }
+        
     }
-    
-    if (player_y >= MAP_HEIGHT) init_stage();
+    if (player_y >= MAP_HEIGHT) {
+        init_stage();
+        lives--;
+    }
 }
-
 
 // 적 이동 로직
 void move_enemies() {
@@ -442,14 +508,13 @@ int kbhit() {
     ch = getchar();
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     fcntl(STDIN_FILENO, F_SETFL, oldf);
-    if(ch != EOF) {
+    if (ch != EOF) {
         ungetc(ch, stdin);
         return 1;
     }
     return 0;
     #endif
 }
-
 
 void clear(){
     printf(" ██████╗██╗     ███████╗ █████╗ ██████╗ \n");
@@ -458,4 +523,14 @@ void clear(){
     printf("██║     ██║     ██╔══╝  ██╔══██║██╔══██╗\n");
     printf("╚██████╗███████╗███████╗██║  ██║██║  ██║\n");
     printf(" ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝\n");
+}
+
+void sound(){
+    #ifdef _WIN32
+        Beep(1000, 25);
+        Beep(1500, 35);
+    #else
+        system("speaker-test -t sine -f 1200 -l 1 >/dev/null 2>&1 &");
+        fflush(stdout);
+    #endif
 }
