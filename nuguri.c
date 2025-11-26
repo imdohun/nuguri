@@ -17,6 +17,7 @@
 // #define MAP_WIDTH 40  // 맵 너비를 40으로 변경
 // #define MAP_HEIGHT 20
 // #define MAX_STAGES 2
+
 #define MAX_ENEMIES 15 // 최대 적 개수 증가
 #define MAX_COINS 30   // 최대 코인 개수 증가
 #define MAX_LIVES 3 // 최대 목숨 지정
@@ -179,7 +180,7 @@ int main() {
         } else {
             c = '\0';
         }
-
+    #endif
         update_game(c, cur->height, cur->width, cur-> map);
         draw_game(cur -> height, cur-> width, cur-> map);
         usleep(90000);
@@ -324,6 +325,9 @@ void init_stage(int height, int width, char** map) {
 
 // 게임 화면 그리기
 void draw_game(int height, int width, char** map) {
+#ifdef _WIN32
+    clrscr();
+#else
     printf("\x1b[2J\x1b[H");       //화면 클리어
 #endif
     printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
@@ -387,6 +391,7 @@ void move_player(char input, int height, int width, char** map) {
                 is_jumping = 1;
                 velocity_y = -3;
             }
+            sound();
             if(on_ladder && map[player_y-1][player_x]=='#') player_y-=1;
             break;
     }
@@ -516,16 +521,16 @@ void clear(){
     printf(" ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝\n");
 }
 
-void sound(){
-    #ifdef _WIN32
-        Beep(1000, 25);
-        Beep(1500, 35);
-    #else
-        system("speaker-test -t sine -f 1200 -l 1 >/dev/null 2>&1 &");
-        fflush(stdout);
-    #endif
+void sound() {
+#ifdef _WIN32
+    Beep(800, 150);
+#elif defined(__APPLE__)
+    system("afplay /System/Library/Sounds/Glass.aiff &");
+#elif defined(__linux__)
+    printf("\a");
+    fflush(stdout);
+#endif
 }
-
 Stage* append(Stage *head, char **map, int height, int width) {
     Stage* newnode = malloc(sizeof(Stage));
     newnode -> map = map;
