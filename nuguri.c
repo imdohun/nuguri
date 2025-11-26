@@ -329,8 +329,10 @@ void draw_game(int height, int width, char** map) {
     printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
     printf("조작: ← → (이동), ↑ ↓ (사다리), Space (점프), q (종료)\n");
 
-    char display_map[height][width];
+    char** display_map = malloc(sizeof(char*) * height);
+
     for(int y=0; y < height; y++) {
+        display_map[y] = malloc(sizeof(char) * (width + 1));
         for(int x=0; x < width; x++) {
             char cell = map[y][x];
             if (cell == 'S' || cell == 'X' || cell == 'C') {
