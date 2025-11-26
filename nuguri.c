@@ -14,9 +14,9 @@
 #endif
 
 // 맵 및 게임 요소 정의 (수정된 부분)
-#define MAP_WIDTH 40  // 맵 너비를 40으로 변경
-#define MAP_HEIGHT 20
-#define MAX_STAGES 2
+// #define MAP_WIDTH 40  // 맵 너비를 40으로 변경
+// #define MAP_HEIGHT 20
+// #define MAX_STAGES 2
 #define MAX_ENEMIES 15 // 최대 적 개수 증가
 #define MAX_COINS 30   // 최대 코인 개수 증가
 #define MAX_LIVES 3 // 최대 목숨 지정
@@ -32,13 +32,23 @@ typedef struct {
     int collected;
 } Coin;
 
+typedef struct{
+    int height;
+    int width;
+    char **map;
+    struct Stage *next;
+}Stage;
+
 // 전역 변수
-char map[MAX_STAGES][MAP_HEIGHT][MAP_WIDTH + 1];
+//char map[MAX_STAGES][MAP_HEIGHT][MAP_WIDTH + 1];
 int player_x, player_y;
 int stage = 0;
 int score = 0;
 int lives = MAX_LIVES;
 int game_over = 0;
+
+int MAX_STAGES;
+
 
 // 플레이어 상태
 int is_jumping = 0;
@@ -59,17 +69,20 @@ struct termios orig_termios;
 // 함수 선언
 void disable_raw_mode();
 void enable_raw_mode();
-void load_maps();
-void init_stage();
-void draw_game();
-void update_game(char input);
-void move_player(char input);
-void move_enemies();
-void check_collisions();
+
+void init_stage(int, int, char**);
+void draw_game(int, int, char**);
+void update_game(char input, int, int, char**);
+void move_player(char input, int, int, char**);
+void move_enemies(int, int, char**);
+void check_collisions(int, int, char**);
 int kbhit();
 void title_menu();
 void clear();
 void sound();
+
+Stage* load_maps();
+Stage* append(Stage* , char** , int , int );
 
 
 #ifdef _WIN32
@@ -89,15 +102,26 @@ int main() {
 #ifdef _WIN32
     setlocale(LC_ALL, ".UTF8");               
     system("chcp 65001 > nul");                 
-
+   
 #endif
 
     title_menu();
 
+    Stage* head = load_maps();
+
+    Stage *cur = head;
+
+    Stage *temp = head;
+    while(temp != NULL) {
+        MAX_STAGES++;
+        temp = temp -> next;
+    }
+    
+    stage = 0;
+
     srand(time(NULL));
     enable_raw_mode();
-    load_maps();
-    init_stage();
+    init_stage(head -> height, head-> width, head ->map);
 
     lives = MAX_LIVES;
     game_over = 0;
@@ -106,7 +130,7 @@ int main() {
     char c = '\0';
 
     while (!game_over && stage < MAX_STAGES) {
-
+        
 #ifdef _WIN32
         if (kbhit()) {
             c = (char)_getch();
@@ -155,20 +179,19 @@ int main() {
         } else {
             c = '\0';
         }
-#endif
-        update_game(c);
-        draw_game();
-#ifdef _WIN32
-        Sleep(90);    
-#else
-        usleep(90000);    
-#endif
 
-        if (map[stage][player_y][player_x] == 'E') {
+        update_game(c, cur->height, cur->width, cur-> map);
+        draw_game(cur -> height, cur-> width, cur-> map);
+        usleep(90000);
+
+        if (cur->map[player_y][player_x] == 'E') {
             stage++;
             score += 100;
+
+            cur = cur -> next;
+
             if (stage < MAX_STAGES) {
-                init_stage();
+                init_stage(cur->height, cur->width, cur-> map);
             } else {
                 game_over = 1;
     #ifdef _WIN32
@@ -252,40 +275,40 @@ void enable_raw_mode(){ }
 #endif
 
 // 맵 파일 로드
-void load_maps() {
-    FILE *file = fopen("map.txt", "r");
-    if (!file) {
-        perror("map.txt 파일을 열 수 없습니다.");
-        exit(1);
-    }
-    int s = 0, r = 0;
-    char line[MAP_WIDTH + 2]; // 버퍼 크기는 MAP_WIDTH에 따라 자동 조절됨
-    while (s < MAX_STAGES && fgets(line, sizeof(line), file)) {
-        if ((line[0] == '\n' || line[0] == '\r') && r > 0) {
-            s++;
-            r = 0;
-            continue;
-        }
-        if (r < MAP_HEIGHT) {
-            line[strcspn(line, "\n\r")] = 0;
-            strncpy(map[s][r], line, MAP_WIDTH + 1);
-            r++;
-        }
-    }
-    fclose(file);
-}
+// void load_maps() {
+//     FILE *file = fopen("map.txt", "r");
+//     if (!file) {
+//         perror("map.txt 파일을 열 수 없습니다.");
+//         exit(1);
+//     }
+//     int s = 0, r = 0;
+//     char line[MAP_WIDTH + 2]; // 버퍼 크기는 MAP_WIDTH에 따라 자동 조절됨
+//     while (s < MAX_STAGES && fgets(line, sizeof(line), file)) {
+//         if ((line[0] == '\n' || line[0] == '\r') && r > 0) {
+//             s++;
+//             r = 0;
+//             continue;
+//         }
+//         if (r < MAP_HEIGHT) {
+//             line[strcspn(line, "\n\r")] = 0;
+//             strncpy(map[s][r], line, MAP_WIDTH + 1);
+//             r++;
+//         }
+//     }
+//     fclose(file);
+// }
 
 
 // 현재 스테이지 초기화
-void init_stage() {
+void init_stage(int height, int width, char** map) {
     enemy_count = 0;
     coin_count = 0;
     is_jumping = 0;
     velocity_y = 0;
 
-    for (int y = 0; y < MAP_HEIGHT; y++) {
-        for (int x = 0; x < MAP_WIDTH; x++) {
-            char cell = map[stage][y][x];
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            char cell = map[y][x];
             if (cell == 'S') {
                 player_x = x;
                 player_y = y;
@@ -298,19 +321,18 @@ void init_stage() {
         }
     }
 }
-void draw_game() {
-#ifdef _WIN32
-    clrscr();
-#else
+
+// 게임 화면 그리기
+void draw_game(int height, int width, char** map) {
     printf("\x1b[2J\x1b[H");       //화면 클리어
 #endif
     printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
     printf("조작: ← → (이동), ↑ ↓ (사다리), Space (점프), q (종료)\n");
 
-    char display_map[MAP_HEIGHT][MAP_WIDTH + 1];
-    for(int y=0; y < MAP_HEIGHT; y++) {
-        for(int x=0; x < MAP_WIDTH; x++) {
-            char cell = map[stage][y][x];
+    char display_map[height][width];
+    for(int y=0; y < height; y++) {
+        for(int x=0; x < width; x++) {
+            char cell = map[y][x];
             if (cell == 'S' || cell == 'X' || cell == 'C') {
                 display_map[y][x] = ' ';
             } else {
@@ -318,7 +340,7 @@ void draw_game() {
             }
         }
     }
-
+    
     for (int i = 0; i < coin_count; i++) {
         if (!coins[i].collected) {
             display_map[coins[i].y][coins[i].x] = 'C';
@@ -331,8 +353,8 @@ void draw_game() {
 
     display_map[player_y][player_x] = 'P';
 
-    for (int y = 0; y < MAP_HEIGHT; y++) {
-        for(int x=0; x< MAP_WIDTH; x++){
+    for (int y = 0; y < height; y++) {
+        for(int x=0; x< width; x++){
             printf("%c", display_map[y][x]);
         }
         printf("\n");
@@ -340,17 +362,16 @@ void draw_game() {
 }
 
 // 게임 상태 업데이트
-void update_game(char input) {
-    move_player(input);
-    move_enemies();
-    check_collisions();
+void update_game(char input, int height, int width, char** map) {
+    move_player(input, height, width, map);
+    move_enemies(height, width, map);
+    check_collisions(height, width, map);
 }
-
 // 플레이어 이동 로직
-void move_player(char input) {
+void move_player(char input, int height, int width, char** map) {
     int next_x = player_x, next_y = player_y;
-    char floor_tile = (player_y + 1 < MAP_HEIGHT) ? map[stage][player_y + 1][player_x] : ' ';
-    char current_tile = map[stage][player_y][player_x];
+    char floor_tile = (player_y + 1 < height) ? map[player_y + 1][player_x] : ' ';
+    char current_tile = map[player_y][player_x];
 
     on_ladder = (current_tile == 'H');
 
@@ -358,21 +379,20 @@ void move_player(char input) {
         case 'a': next_x--; break;
         case 'd': next_x++; break;
         case 'w': if (on_ladder) next_y--; break;
-        case 's': if (on_ladder && (player_y + 1 < MAP_HEIGHT) && map[stage][player_y + 1][player_x] != '#') next_y++; break;
+        case 's': if (on_ladder && (player_y + 1 < height) && map[player_y + 1][player_x] != '#') next_y++; break;
         case ' ':
             if (!is_jumping && (floor_tile == '#' || on_ladder)) {
                 is_jumping = 1;
                 velocity_y = -3;
             }
-            sound();
-            if(on_ladder && map[stage][player_y-1][player_x]=='#') player_y-=1;
+            if(on_ladder && map[player_y-1][player_x]=='#') player_y-=1;
             break;
     }
 
-    if (next_x >= 0 && next_x < MAP_WIDTH && map[stage][player_y][next_x] != '#') player_x = next_x;
-
+    if (next_x >= 0 && next_x < width && map[player_y][next_x] != '#') player_x = next_x;
+    
     if (on_ladder && (input == 'w' || input == 's')) {
-        if(next_y >= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] != '#') {
+        if(next_y >= 0 && next_y < height && map[next_y][player_x] != '#') {
             player_y = next_y;
             is_jumping = 0;
             velocity_y = 0;
@@ -392,44 +412,44 @@ void move_player(char input) {
             if(next_y < 0) next_y = 0;
             velocity_y++;
 
-            if (velocity_y <= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] == '#') {
+            if (velocity_y <= 0 && next_y < height && map[next_y][player_x] == '#') {
                 velocity_y = 0;
 
             } 
-            else if (velocity_y>0&&map[stage][next_y][player_x]=='#'){
+            else if (velocity_y>0&&map[next_y][player_x]=='#'){
                 player_y;
             } 
-            else if (next_y < MAP_HEIGHT) {
+            else if (next_y < height) {
 
                 player_y = next_y;
             }
-
-            if ((player_y + 1 < MAP_HEIGHT) && map[stage][player_y + 1][player_x] == '#') {
+            
+            if ((player_y + 1 < height) && map[player_y + 1][player_x] == '#') {
                 is_jumping = 0;
                 velocity_y = 0;
             }
 
-            if (player_y + 1 >= MAP_HEIGHT) player_y++;
+            if (player_y + 1 >= height) player_y++;
 
         } else {
             if (floor_tile != '#' && floor_tile != 'H') {
-                 if (player_y + 1 < MAP_HEIGHT) player_y++;
+                 if (player_y + 1 < height) player_y++;
                  else  player_y++;
             }
         }
-
+        
     }
-    if (player_y >= MAP_HEIGHT) {
-        init_stage();
+    if (player_y >= height) {
+        init_stage(height, width, map);
         lives--;
     }
 }
 
 // 적 이동 로직
-void move_enemies() {
+void move_enemies(int height, int width, char** map) {
     for (int i = 0; i < enemy_count; i++) {
         int next_x = enemies[i].x + enemies[i].dir;
-        if (next_x < 0 || next_x >= MAP_WIDTH || map[stage][enemies[i].y][next_x] == '#' || (enemies[i].y + 1 < MAP_HEIGHT && map[stage][enemies[i].y + 1][next_x] == ' ')) {
+        if (next_x < 0 || next_x >= width || map[enemies[i].y][next_x] == '#' || (enemies[i].y + 1 < height && map[enemies[i].y + 1][next_x] == ' ')) {
             enemies[i].dir *= -1;
         } else {
             enemies[i].x = next_x;
@@ -438,14 +458,14 @@ void move_enemies() {
 }
 
 // 충돌 감지 로직
-void check_collisions() {
+void check_collisions(int height, int width, char** map) {
     for (int i = 0; i < enemy_count; i++) {
         if (player_x == enemies[i].x && player_y == enemies[i].y) {
             lives--;
             score = (score > 50) ? score - 50 : 0;
-
+            
             if(lives > 0){
-                init_stage();
+                init_stage(height, width, map);
             }else if(lives <=0){
                 game_over = 1;
             }
@@ -502,4 +522,66 @@ void sound(){
         system("speaker-test -t sine -f 1200 -l 1 >/dev/null 2>&1 &");
         fflush(stdout);
     #endif
+}
+
+Stage* append(Stage *head, char **map, int height, int width) {
+    Stage* newnode = malloc(sizeof(Stage));
+    newnode -> map = map;
+    newnode -> width = width;
+    newnode -> height = height;
+    newnode -> next = NULL;
+
+    if(head == NULL) return newnode;
+
+    Stage* temp = head;
+    while(temp -> next != NULL) temp = temp ->next;
+    temp -> next = newnode;
+
+    return head;
+}
+
+Stage* load_maps() {
+    FILE *file = fopen("map.txt", "r");
+    if (!file) {
+        perror("map.txt 파일을 열 수 없습니다.");
+        exit(1);
+    }
+
+    Stage* head = NULL;
+    char** map = malloc(sizeof(char*));
+    int height = 0;
+    int width = 0;
+    int stage = 0;
+    
+    char line[2048];
+
+    while (fgets(line, sizeof(line), file)) {
+        if ((line[0] == '\n' || line[0] == '\r') && height > 0) {
+            
+            head = append(head, map, height, width);
+
+            map = malloc(sizeof(char*));
+            height = 0;
+            width = 0;
+
+            stage++;
+            continue;
+        }
+
+        int len = strcspn(line, "\n\r");
+        if (len > width) width = len;
+
+        map = realloc(map, sizeof(char*) * (height + 1));
+        map[height] = malloc(sizeof(char) * (len + 1));
+        strncpy(map[height], line, len);
+        map[height][len] = 0;
+
+        height++;  
+    }
+    if (height > 0) {
+        head = append(head, map, height, width);    
+    }
+
+    fclose(file);
+    return head;
 }
