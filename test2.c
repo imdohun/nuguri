@@ -136,7 +136,7 @@ void enable_raw_mode() {
 
 // 맵 파일 로드
 void load_maps() {
-    FILE *file = fopen("map.txt", "r");
+    FILE *file = fopen("map2.txt", "r");
     if (!file) {
         perror("map.txt 파일을 열 수 없습니다.");
         exit(1);
@@ -188,20 +188,21 @@ void calc_map_x_size(FILE *file){
 
 void calc_map_y_size(FILE *file){
     int size = 0;
-
-	//1칸만큼 읽어서 \n or EOF 아닐때까지 size++
-	while (1) {
-        int ch = fgetc(file);
-        if (ch == '\n' || ch == '\r' || ch == EOF) break;
-            size++;
-            putchar('\n');
+    char buf[1024];
+	//1024개 만큼 문자를 읽어와서 
+	while (fgets(buf, sizeof(buf), file) != NULL) {
+        //첫번째값 비교
+        if (buf[0] == '\n') {
+            break;  // 빈 줄 만나면 루프 종료
         }
+        size++;
+    }
 	
 	//파일 포인터 위치 초기화
 	rewind(file);
 	
-	//전역변수에 값 적용
-	MAP_HEIGHT = size;
+	//전역변수에 값 적용()
+	MAP_HEIGHT = size+1;
 	return;
 }
 
