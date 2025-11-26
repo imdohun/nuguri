@@ -1,13 +1,26 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <conio.h>
+#else
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #ifdef _WIN32
-#include <windows.h>   
+=======
+void sleep_ms(int ms) {
+    Sleep(ms);
+}
+#else
+void sleep_ms(int ms) {
+    usleep(ms * 1000);
+}
 #endif
 
 // 맵 및 게임 요소 정의 (수정된 부분)
@@ -49,7 +62,9 @@ Coin coins[MAX_COINS];
 int coin_count = 0;
 
 // 터미널 설정
+#ifndef _WIN32
 struct termios orig_termios;
+#endif
 
 // 함수 선언
 void disable_raw_mode();
@@ -84,6 +99,26 @@ int main() {
 
     while (!game_over && stage < MAX_STAGES) {
         if (kbhit()) {
+            #ifdef _WIN32
+            c = _getch();
+            if (c == 113) {
+                game_over = 1;
+                continue;
+            }
+
+            if(c == 0 || c == 224) {
+                switch(_getch()) {
+                    case 72 : c = 'w'; 
+                    break;
+                    case 75 : c = 'a';
+                    break;
+                    case 77 : c = 'd';
+                    break;
+                    case 80 : c = 's';
+                    break;
+                }
+            }
+            #else
             c = getchar();
             if (c == 'q') {
                 game_over = 1;
@@ -99,13 +134,14 @@ int main() {
                 }
             }
             while (kbhit()) getchar();
+            #endif
         } else {
             c = '\0';
         }
 
         update_game(c);
         draw_game();
-        usleep(90000);
+        sleep_ms(90);
 
         if (map[stage][player_y][player_x] == 'E') {
             stage++;
@@ -182,13 +218,19 @@ void title_menu() {
 
 
 // 터미널 Raw 모드 활성화/비활성화
-void disable_raw_mode() { tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios); }
+void disable_raw_mode() {
+    #ifndef _WIN32
+     tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+    #endif
+ }
 void enable_raw_mode() {
+    #ifndef _WIN32
     tcgetattr(STDIN_FILENO, &orig_termios);
     atexit(disable_raw_mode);
     struct termios raw = orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    #endif
 }
 
 // 맵 파일 로드
@@ -400,6 +442,9 @@ void check_collisions() {
 
 // 비동기 키보드 입력 확인
 int kbhit() {
+    #ifdef _WIN32
+    return _kbhit();
+    #else
     struct termios oldt, newt;
     int ch;
     int oldf;
@@ -417,6 +462,7 @@ int kbhit() {
         return 1;
     }
     return 0;
+    #endif
 }
 
 
