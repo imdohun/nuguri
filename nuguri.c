@@ -98,14 +98,14 @@ int main() {
     while (!game_over && stage < MAX_STAGES) {
         if (kbhit()) {
             #ifdef _WIN32
-            c = getch();
+            c = _getch();
             if (c == 113) {
                 game_over = 1;
                 continue;
             }
 
             if(c == 0 || c == 224) {
-                switch(getch()) {
+                switch(_getch()) {
                     case 72 : c = 'w'; 
                     break;
                     case 75 : c = 'a';
