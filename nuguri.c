@@ -1,25 +1,16 @@
-#ifdef _WIN32
-#include <windows.h>
-#include <conio.h>
-#else
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <locale.h>
 
 #ifdef _WIN32
-void sleep_ms(int ms) {
-    Sleep(ms);
-}
+    #include <windows.h>
+    #include <conio.h>
 #else
-void sleep_ms(int ms) {
-    usleep(ms * 1000);
-}
+    #include <unistd.h>
+    #include <termios.h>
+    #include <fcntl.h>
 #endif
 
 // 맵 및 게임 요소 정의 (수정된 부분)
@@ -60,10 +51,9 @@ int enemy_count = 0;
 Coin coins[MAX_COINS];
 int coin_count = 0;
 
-// 터미널 설정
 #ifndef _WIN32
+// 터미널 설정 (리눅스/WSL 전용)
 struct termios orig_termios;
-#endif
 #endif
 
 // 함수 선언
@@ -189,7 +179,11 @@ int main() {
 #endif
         update_game(c);
         draw_game();
-        sleep_ms(90);
+#ifdef _WIN32
+        Sleep(90);    
+#else
+        usleep(90000);    
+#endif
 
         if (map[stage][player_y][player_x] == 'E') {
             stage++;
@@ -260,14 +254,13 @@ void title_menu() {
 }
 
 
-// 터미널 Raw 모드 활성화/비활성화
-void disable_raw_mode() {
-    #ifndef _WIN32
-     tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-    #endif
- }
-void enable_raw_mode() {
-    #ifndef _WIN32
+#ifndef _WIN32
+// 리눅스/WSL: 터미널 Raw 모드 활성화/비활성화
+void disable_raw_mode(){ 
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios); 
+}
+
+void enable_raw_mode(){
     tcgetattr(STDIN_FILENO, &orig_termios);
     atexit(disable_raw_mode);
     struct termios raw = orig_termios;
@@ -493,9 +486,9 @@ void check_collisions() {
 
 // 비동기 키보드 입력 확인
 int kbhit() {
-    #ifdef _WIN32
+#ifdef _WIN32
     return _kbhit();
-    #else
+#else
     struct termios oldt, newt;
     int ch;
     int oldf;
@@ -513,7 +506,7 @@ int kbhit() {
         return 1;
     }
     return 0;
-    #endif
+#endif
 }
 
 void clear(){
