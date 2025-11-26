@@ -1,26 +1,16 @@
-#ifdef _WIN32
-#include <windows.h>
-#include <conio.h>
-#else
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <locale.h>
 
 #ifdef _WIN32
-=======
-void sleep_ms(int ms) {
-    Sleep(ms);
-}
+    #include <windows.h>
+    #include <conio.h>
 #else
-void sleep_ms(int ms) {
-    usleep(ms * 1000);
-}
+    #include <unistd.h>
+    #include <termios.h>
+    #include <fcntl.h>
 #endif
 
 // 맵 및 게임 요소 정의 (수정된 부분)
@@ -61,8 +51,8 @@ int enemy_count = 0;
 Coin coins[MAX_COINS];
 int coin_count = 0;
 
-// 터미널 설정
 #ifndef _WIN32
+// 터미널 설정 (리눅스/WSL 전용)
 struct termios orig_termios;
 #endif
 
@@ -82,7 +72,25 @@ void clear();
 void sound();
 
 
+#ifdef _WIN32
+void clrscr(void)
+{
+  system("cls"); 
+}
+#else
+void clrscr()
+{                             
+  printf("\033[2J\033[1;1H"); 
+  fflush(stdout);             
+}
+#endif
+
 int main() {
+#ifdef _WIN32
+    setlocale(LC_ALL, ".UTF8");               
+    system("chcp 65001 > nul");                 
+   
+#endif
 
     title_menu();
 
@@ -98,27 +106,37 @@ int main() {
     char c = '\0';
 
     while (!game_over && stage < MAX_STAGES) {
+        
+#ifdef _WIN32
         if (kbhit()) {
-            #ifdef _WIN32
-            c = _getch();
-            if (c == 113) {
+            c = (char)_getch();
+
+            if (c == 'q' || c == 'Q') {
                 game_over = 1;
                 continue;
             }
 
-            if(c == 0 || c == 224) {
-                switch(_getch()) {
-                    case 72 : c = 'w'; 
-                    break;
-                    case 75 : c = 'a';
-                    break;
-                    case 77 : c = 'd';
-                    break;
-                    case 80 : c = 's';
-                    break;
+            // 방향키 처리 (0 또는 0xE0 후에 코드 들어옴)
+            if (c == 0 || c == (char)0xE0) {
+                int code = _getch();
+                switch (code) {
+                    case 72: c = 'w'; break; // Up
+                    case 80: c = 's'; break; // Down
+                    case 77: c = 'd'; break; // Right
+                    case 75: c = 'a'; break; // Left
+                    default: c = '\0'; break;
                 }
             }
-            #else
+
+            // 버퍼에 남아 있는 추가 키 버리기
+            while (kbhit()) _getch();
+
+        } else {
+            c = '\0';
+        }
+#else
+
+        if (kbhit()) {
             c = getchar();
             if (c == 'q') {
                 game_over = 1;
@@ -134,14 +152,17 @@ int main() {
                 }
             }
             while (kbhit()) getchar();
-            #endif
         } else {
             c = '\0';
         }
-
+#endif
         update_game(c);
         draw_game();
-        sleep_ms(90);
+#ifdef _WIN32
+        Sleep(90);    
+#else
+        usleep(90000);    
+#endif
 
         if (map[stage][player_y][player_x] == 'E') {
             stage++;
@@ -150,7 +171,12 @@ int main() {
                 init_stage();
             } else {
                 game_over = 1;
-                printf("\x1b[2J\x1b[H");clear();
+    #ifdef _WIN32
+                clrscr();
+    #else
+                 printf("\x1b[2J\x1b[H");
+    #endif
+                clear();
                 printf("축하합니다! 모든 스테이지를 클리어했습니다!\n");
                 printf("최종 점수: %d\n", score);
             }
@@ -158,7 +184,11 @@ int main() {
     }
 
     if(lives <= 0 && stage<MAX_STAGES){
+#ifdef _WIN32
+        clrscr();
+#else
         printf("\x1b[2J\x1b[H");
+#endif
         printf("GAME OVER!\n");
         printf("최종 점수: %d\n", score);
     }
@@ -166,20 +196,6 @@ int main() {
     disable_raw_mode();
     return 0;
 }
-
-// 시작 메뉴
-#ifdef _WIN32
-void clrscr(void)
-{
-  system("cls"); 
-}
-#else
-void clrscr()
-{                             
-  printf("\033[2J\033[1;1H"); 
-  fflush(stdout);             
-}
-#endif
 
 void title_menu() {
     int a;
@@ -217,21 +233,23 @@ void title_menu() {
 }
 
 
-// 터미널 Raw 모드 활성화/비활성화
-void disable_raw_mode() {
-    #ifndef _WIN32
-     tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-    #endif
- }
-void enable_raw_mode() {
-    #ifndef _WIN32
+#ifndef _WIN32
+// 리눅스/WSL: 터미널 Raw 모드 활성화/비활성화
+void disable_raw_mode(){ 
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios); 
+}
+
+void enable_raw_mode(){
     tcgetattr(STDIN_FILENO, &orig_termios);
     atexit(disable_raw_mode);
     struct termios raw = orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-    #endif
 }
+#else
+void disable_raw_mode(){ }
+void enable_raw_mode(){ }
+#endif
 
 // 맵 파일 로드
 void load_maps() {
@@ -283,7 +301,7 @@ void init_stage() {
 
 // 게임 화면 그리기
 void draw_game() {
-    printf("\x1b[2J\x1b[H");       //화면 클리어
+    printf("\x1b[H"); 
     printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
     printf("조작: ← → (이동), ↑ ↓ (사다리), Space (점프), q (종료)\n");
 
@@ -343,8 +361,8 @@ void move_player(char input) {
             if (!is_jumping && (floor_tile == '#' || on_ladder)) {
                 is_jumping = 1;
                 velocity_y = -3;
-                sound();
             }
+            sound();
             if(on_ladder && map[stage][player_y-1][player_x]=='#') player_y-=1;
             break;
     }
@@ -442,9 +460,9 @@ void check_collisions() {
 
 // 비동기 키보드 입력 확인
 int kbhit() {
-    #ifdef _WIN32
+#ifdef _WIN32
     return _kbhit();
-    #else
+#else
     struct termios oldt, newt;
     int ch;
     int oldf;
@@ -457,14 +475,13 @@ int kbhit() {
     ch = getchar();
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     fcntl(STDIN_FILENO, F_SETFL, oldf);
-    if(ch != EOF) {
+    if (ch != EOF) {
         ungetc(ch, stdin);
         return 1;
     }
     return 0;
-    #endif
+#endif
 }
-
 
 void clear(){
     printf(" ██████╗██╗     ███████╗ █████╗ ██████╗ \n");
