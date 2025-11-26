@@ -301,7 +301,11 @@ void init_stage() {
 
 // 게임 화면 그리기
 void draw_game() {
-    printf("\x1b[H"); 
+#ifdef _WIN32
+    clrscr();
+#else
+    printf("\x1b[2J\x1b[H");       //화면 클리어
+#endif
     printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
     printf("조작: ← → (이동), ↑ ↓ (사다리), Space (점프), q (종료)\n");
 
