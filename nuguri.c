@@ -89,7 +89,7 @@ int main() {
 #ifdef _WIN32
     setlocale(LC_ALL, ".UTF8");               
     system("chcp 65001 > nul");                 
-   
+
 #endif
 
     title_menu();
@@ -106,7 +106,7 @@ int main() {
     char c = '\0';
 
     while (!game_over && stage < MAX_STAGES) {
-        
+
 #ifdef _WIN32
         if (kbhit()) {
             c = (char)_getch();
@@ -298,8 +298,6 @@ void init_stage() {
         }
     }
 }
-
-// 게임 화면 그리기
 void draw_game() {
 #ifdef _WIN32
     clrscr();
@@ -320,7 +318,7 @@ void draw_game() {
             }
         }
     }
-    
+
     for (int i = 0; i < coin_count; i++) {
         if (!coins[i].collected) {
             display_map[coins[i].y][coins[i].x] = 'C';
@@ -372,7 +370,7 @@ void move_player(char input) {
     }
 
     if (next_x >= 0 && next_x < MAP_WIDTH && map[stage][player_y][next_x] != '#') player_x = next_x;
-    
+
     if (on_ladder && (input == 'w' || input == 's')) {
         if(next_y >= 0 && next_y < MAP_HEIGHT && map[stage][next_y][player_x] != '#') {
             player_y = next_y;
@@ -405,7 +403,7 @@ void move_player(char input) {
 
                 player_y = next_y;
             }
-            
+
             if ((player_y + 1 < MAP_HEIGHT) && map[stage][player_y + 1][player_x] == '#') {
                 is_jumping = 0;
                 velocity_y = 0;
@@ -419,7 +417,7 @@ void move_player(char input) {
                  else  player_y++;
             }
         }
-        
+
     }
     if (player_y >= MAP_HEIGHT) {
         init_stage();
@@ -445,7 +443,7 @@ void check_collisions() {
         if (player_x == enemies[i].x && player_y == enemies[i].y) {
             lives--;
             score = (score > 50) ? score - 50 : 0;
-            
+
             if(lives > 0){
                 init_stage();
             }else if(lives <=0){
