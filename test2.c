@@ -74,7 +74,7 @@ int main() {
     lives = MAX_LIVES;
     game_over = 0;
     
-    printf("long: %ld",y_start);
+    
     char c = '\0';
 
     while (!game_over && stage < MAX_STAGES) {
@@ -108,27 +108,6 @@ int main() {
             printf("before file open");
             if (stage < MAX_STAGES) {
                 load_maps();
-                //다음스테이지 맵 크기 지정
-                /**
-                printf("file opend");
-                FILE *file = fopen("map2.txt", "r");
-                printf("file opend");
-                if (!file) {
-                    perror("map.txt 파일을 열 수 없습니다.");
-                    exit(1);
-                    }
-                calc_map_x_size(file);
-                calc_map_y_size(file);
-                fclose(file);
-                map = (char ***)malloc(sizeof(char **) * MAX_STAGES);
-                for (int s = 0; s < MAX_STAGES; s++) {
-                    map[s] = (char **)malloc(sizeof(char *) * MAP_HEIGHT);
-
-                    for (int r = 0; r < MAP_HEIGHT; r++) {
-                            map[s][r] = (char *)malloc(sizeof(char) * (MAP_WIDTH + 1));
-                        }
-                }
-                */
                 init_stage();
             } else {
                 game_over = 1;
@@ -235,7 +214,7 @@ void calc_map_y_size(FILE *file){
 	rewind(file);
 	
 	//전역변수에 값 적용(map height+1은 임시처리)
-	MAP_HEIGHT = size+1;
+	MAP_HEIGHT = size;
 	return;
 }
 
