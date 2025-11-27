@@ -28,12 +28,12 @@ typedef struct {
     int collected;
 } Coin;
 
-typedef struct{
+typedef struct Stage {
     int height;
     int width;
     char **map;
-    struct Stage *next;
-}Stage;
+    struct Stage *next;  // 자기 자신 타입 포인터
+} Stage;
 
 // 전역 변수
 int player_x, player_y;
