@@ -192,11 +192,9 @@ int main() {
                 init_stage(cur->height, cur->width, cur-> map);
             } else {
                 game_over = 1;
-    #ifdef _WIN32
+    
                 clrscr();
-    #else
-                 printf("\x1b[2J\x1b[H");
-    #endif
+    
                 clear();
                 printf("축하합니다! 모든 스테이지를 클리어했습니다!\n");
                 printf("최종 점수: %d\n", score);
@@ -205,11 +203,9 @@ int main() {
     }
 
     if(lives <= 0 && stage<MAX_STAGES){
-#ifdef _WIN32
+
         clrscr();
-#else
-        printf("\x1b[2J\x1b[H");
-#endif
+
         printf("GAME OVER!\n");
         printf("최종 점수: %d\n", score);
     }
@@ -297,11 +293,9 @@ void init_stage(int height, int width, char** map) {
 
 // 게임 화면 그리기
 void draw_game(int height, int width, char** map) {
-#ifdef _WIN32
+
     clrscr();
-#else
-    printf("\x1b[2J\x1b[H");       //화면 클리어
-#endif
+
     printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
     printf("조작: ← → (이동), ↑ ↓ (사다리), Space (점프), q (종료)\n");
 
