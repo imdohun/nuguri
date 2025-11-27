@@ -177,8 +177,11 @@ int main() {
     #endif
         update_game(c, cur->height, cur->width, cur-> map);
         draw_game(cur -> height, cur-> width, cur-> map);
-        usleep(90000);
-
+        #ifdef _WIN32
+            Sleep(90);    
+        #else
+            usleep(90000);
+        #endif
         if (cur->map[player_y][player_x] == 'E') {
             stage++;
             score += 100;
