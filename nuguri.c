@@ -13,11 +13,6 @@
     #include <fcntl.h>
 #endif
 
-// 맵 및 게임 요소 정의 (수정된 부분)
-// #define MAP_WIDTH 40  // 맵 너비를 40으로 변경
-// #define MAP_HEIGHT 20
-// #define MAX_STAGES 2
-
 #define MAX_ENEMIES 15 // 최대 적 개수 증가
 #define MAX_COINS 30   // 최대 코인 개수 증가
 #define MAX_LIVES 3 // 최대 목숨 지정
@@ -41,7 +36,6 @@ typedef struct{
 }Stage;
 
 // 전역 변수
-//char map[MAX_STAGES][MAP_HEIGHT][MAP_WIDTH + 1];
 int player_x, player_y;
 int stage = 0;
 int score = 0;
@@ -274,31 +268,6 @@ void enable_raw_mode(){
 void disable_raw_mode(){ }
 void enable_raw_mode(){ }
 #endif
-
-// 맵 파일 로드
-// void load_maps() {
-//     FILE *file = fopen("map.txt", "r");
-//     if (!file) {
-//         perror("map.txt 파일을 열 수 없습니다.");
-//         exit(1);
-//     }
-//     int s = 0, r = 0;
-//     char line[MAP_WIDTH + 2]; // 버퍼 크기는 MAP_WIDTH에 따라 자동 조절됨
-//     while (s < MAX_STAGES && fgets(line, sizeof(line), file)) {
-//         if ((line[0] == '\n' || line[0] == '\r') && r > 0) {
-//             s++;
-//             r = 0;
-//             continue;
-//         }
-//         if (r < MAP_HEIGHT) {
-//             line[strcspn(line, "\n\r")] = 0;
-//             strncpy(map[s][r], line, MAP_WIDTH + 1);
-//             r++;
-//         }
-//     }
-//     fclose(file);
-// }
-
 
 // 현재 스테이지 초기화
 void init_stage(int height, int width, char** map) {
