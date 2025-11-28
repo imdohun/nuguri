@@ -393,7 +393,8 @@ void move_player(char input, int height, int width, char** map) {
 
             } 
             else if (velocity_y>0&&map[next_y][player_x]=='#'){
-                player_y;
+                velocity_y = 0;
+                is_jumping = 0;
             } 
             else if (next_y < height) {
 
