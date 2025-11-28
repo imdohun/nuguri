@@ -13,10 +13,6 @@
     #include <fcntl.h>
 #endif
 
-// 맵 및 게임 요소 정의 (수정된 부분)
-// #define MAP_WIDTH 40  // 맵 너비를 40으로 변경
-// #define MAP_HEIGHT 20
-// #define MAX_STAGES 2
 #define MAX_ENEMIES 15 // 최대 적 개수 증가
 #define MAX_COINS 30   // 최대 코인 개수 증가
 #define MAX_LIVES 3 // 최대 목숨 지정
@@ -32,15 +28,14 @@ typedef struct {
     int collected;
 } Coin;
 
-typedef struct{
+typedef struct Stage {
     int height;
     int width;
     char **map;
-    struct Stage *next;
-}Stage;
+    struct Stage *next;  // 자기 자신 타입 포인터
+} Stage;
 
 // 전역 변수
-//char map[MAX_STAGES][MAP_HEIGHT][MAP_WIDTH + 1];
 int player_x, player_y;
 int stage = 0;
 int score = 0;
@@ -91,8 +86,7 @@ void clrscr(void)
   system("cls"); 
 }
 #else
-void clrscr()
-{                             
+void clrscr(){                             
   printf("\033[2J\033[1;1H"); 
   fflush(stdout);             
 }
@@ -179,16 +173,14 @@ int main() {
         } else {
             c = '\0';
         }
-
-#endif
+    #endif
         update_game(c, cur->height, cur->width, cur-> map);
         draw_game(cur -> height, cur-> width, cur-> map);
-#ifdef _WIN32
-        Sleep(90);    
-#else
-        usleep(90000);    
-#endif
-
+        #ifdef _WIN32
+            Sleep(90);    
+        #else
+            usleep(90000);
+        #endif
         if (cur->map[player_y][player_x] == 'E') {
             stage++;
             score += 100;
@@ -199,11 +191,9 @@ int main() {
                 init_stage(cur->height, cur->width, cur-> map);
             } else {
                 game_over = 1;
-    #ifdef _WIN32
+    
                 clrscr();
-    #else
-                 printf("\x1b[2J\x1b[H");
-    #endif
+    
                 clear();
                 printf("축하합니다! 모든 스테이지를 클리어했습니다!\n");
                 printf("최종 점수: %d\n", score);
@@ -212,11 +202,9 @@ int main() {
     }
 
     if(lives <= 0 && stage<MAX_STAGES){
-#ifdef _WIN32
+
         clrscr();
-#else
-        printf("\x1b[2J\x1b[H");
-#endif
+
         printf("GAME OVER!\n");
         printf("최종 점수: %d\n", score);
     }
@@ -257,6 +245,7 @@ void title_menu() {
             continue;
         }
     }
+    clrscr();
     return;
 }
 
@@ -279,33 +268,9 @@ void disable_raw_mode(){ }
 void enable_raw_mode(){ }
 #endif
 
-// 맵 파일 로드
-// void load_maps() {
-//     FILE *file = fopen("map.txt", "r");
-//     if (!file) {
-//         perror("map.txt 파일을 열 수 없습니다.");
-//         exit(1);
-//     }
-//     int s = 0, r = 0;
-//     char line[MAP_WIDTH + 2]; // 버퍼 크기는 MAP_WIDTH에 따라 자동 조절됨
-//     while (s < MAX_STAGES && fgets(line, sizeof(line), file)) {
-//         if ((line[0] == '\n' || line[0] == '\r') && r > 0) {
-//             s++;
-//             r = 0;
-//             continue;
-//         }
-//         if (r < MAP_HEIGHT) {
-//             line[strcspn(line, "\n\r")] = 0;
-//             strncpy(map[s][r], line, MAP_WIDTH + 1);
-//             r++;
-//         }
-//     }
-//     fclose(file);
-// }
-
-
 // 현재 스테이지 초기화
 void init_stage(int height, int width, char** map) {
+
     enemy_count = 0;
     coin_count = 0;
     is_jumping = 0;
@@ -325,16 +290,14 @@ void init_stage(int height, int width, char** map) {
             }
         }
     }
+    clrscr();   
 }
 
 // 게임 화면 그리기
-
 void draw_game(int height, int width, char** map) {
-#ifdef _WIN32
-    clrscr();
-#else
-    printf("\x1b[2J\x1b[H");       //화면 클리어
-#endif
+
+    printf("\033[H");
+
     printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
     printf("조작: ← → (이동), ↑ ↓ (사다리), Space (점프), q (종료)\n");
 
@@ -526,16 +489,16 @@ void clear(){
     printf(" ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝\n");
 }
 
-void sound(){
-    #ifdef _WIN32
-        Beep(1000, 25);
-        Beep(1500, 35);
-    #else
-        system("speaker-test -t sine -f 1200 -l 1 >/dev/null 2>&1 &");
-        fflush(stdout);
-    #endif
+void sound() {
+#ifdef _WIN32
+    Beep(800, 150);
+#elif defined(__APPLE__)
+    system("afplay /System/Library/Sounds/Glass.aiff &");
+#elif defined(__linux__)
+    printf("\a");
+    fflush(stdout);
+#endif
 }
-
 Stage* append(Stage *head, char **map, int height, int width) {
     Stage* newnode = malloc(sizeof(Stage));
     newnode -> map = map;
