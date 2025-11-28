@@ -102,6 +102,8 @@ int main() {
 
     title_menu();
 
+    printf("\033[?25l");
+
     Stage* head = load_maps();
 
     Stage *cur = head;
@@ -294,7 +296,7 @@ void init_stage(int height, int width, char** map) {
 // 게임 화면 그리기
 void draw_game(int height, int width, char** map) {
 
-    clrscr();
+    printf("\033[H");
 
     printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
     printf("조작: ← → (이동), ↑ ↓ (사다리), Space (점프), q (종료)\n");
