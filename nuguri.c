@@ -93,6 +93,8 @@ void clrscr(){
 #endif
 
 int main() {
+    printf("\033[?25l");
+
 #ifdef _WIN32
     setlocale(LC_ALL, ".UTF8");               
     system("chcp 65001 > nul");                 
@@ -197,6 +199,7 @@ int main() {
                 clear();
                 printf("축하합니다! 모든 스테이지를 클리어했습니다!\n");
                 printf("최종 점수: %d\n", score);
+                printf("\033[?25h");
             }
         }
     }
@@ -207,6 +210,7 @@ int main() {
 
         printf("GAME OVER!\n");
         printf("최종 점수: %d\n", score);
+        printf("\033[?25h");
     }
 
     disable_raw_mode();
