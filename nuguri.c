@@ -272,6 +272,7 @@ void enable_raw_mode(){ }
 
 // 현재 스테이지 초기화
 void init_stage(int height, int width, char** map) {
+    clrscr();
     enemy_count = 0;
     coin_count = 0;
     is_jumping = 0;
