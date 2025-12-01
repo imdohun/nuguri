@@ -187,16 +187,16 @@ int main() {
         if (cur->map[player_y][player_x] == 'E') {
             stage++;
             score += 100;
-
+            temp = cur;
             cur = cur -> next;
-
+            free(temp); // 메모리 해제
             if (stage < MAX_STAGES) {
                 init_stage(cur->height, cur->width, cur-> map);
             } else {
                 game_over = 1;
     
                 clrscr();
-    
+                printf("\033[?25h");
                 clear();
                 printf("축하합니다! 모든 스테이지를 클리어했습니다!\n");
                 printf("최종 점수: %d\n", score);
@@ -207,7 +207,7 @@ int main() {
     if(lives <= 0 && stage<MAX_STAGES){
 
         clrscr();
-
+        printf("\033[?25h");
         printf("GAME OVER!\n");
         printf("최종 점수: %d\n", score);
     }
