@@ -301,7 +301,7 @@ void draw_game(int height, int width, char** map) {
 
     printf("Stage: %d | Score: %d | Lives: %d\n", stage + 1, score, lives);
     printf("조작: ← → (이동), ↑ ↓ (사다리), Space (점프), q (종료)\n");
-
+    /*
     char** display_map = malloc(sizeof(char*) * height);
 
     for(int y=0; y < height; y++) {
@@ -315,7 +315,21 @@ void draw_game(int height, int width, char** map) {
             }
         }
     }
-    
+    */
+    char display_map[height][width+1];
+    for(int y=0; y < height; y++) {
+
+        for(int x=0; x <= width; x++) {
+            char cell = map[y][x];
+            if (cell == 'S' || cell == 'X' || cell == 'C') {
+                display_map[y][x] = ' ';
+            } else {
+                display_map[y][x] = cell;
+            }
+        }
+    }
+
+
     for (int i = 0; i < coin_count; i++) {
         if (!coins[i].collected) {
             display_map[coins[i].y][coins[i].x] = 'C';
