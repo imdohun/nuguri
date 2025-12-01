@@ -306,7 +306,7 @@ void draw_game(int height, int width, char** map) {
 
     for(int y=0; y < height; y++) {
         display_map[y] = malloc(sizeof(char) * (width + 1));
-        for(int x=0; x < width; x++) {
+        for(int x=0; x <= width; x++) {
             char cell = map[y][x];
             if (cell == 'S' || cell == 'X' || cell == 'C') {
                 display_map[y][x] = ' ';
@@ -329,9 +329,7 @@ void draw_game(int height, int width, char** map) {
     display_map[player_y][player_x] = 'P';
 
     for (int y = 0; y < height; y++) {
-        for(int x=0; x< width; x++){
-            printf("%c", display_map[y][x]);
-        }
+        printf("%s", display_map[y]);
         printf("\n");
     }
 }
