@@ -39,7 +39,7 @@ typedef struct Stage {
 int player_x, player_y;
 int stage = 0;
 int score = 0;
-int lives = MAX_LIVES;
+int lives;
 int game_over = 0;
 
 int MAX_STAGES;
