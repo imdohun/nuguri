@@ -319,7 +319,7 @@ void draw_game(int height, int width, char** map) {
     char display_map[height][width+1];
     for(int y=0; y < height; y++) {
 
-        for(int x=0; x <= width; x++) {
+        for(int x=0; x < width; x++) {
             char cell = map[y][x];
             if (cell == 'S' || cell == 'X' || cell == 'C') {
                 display_map[y][x] = ' ';
