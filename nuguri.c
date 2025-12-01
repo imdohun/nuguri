@@ -86,15 +86,14 @@ void clrscr(void)
   system("cls"); 
 }
 #else
-void clrscr(){                             
+void clrscr()
+{                             
   printf("\033[2J\033[1;1H"); 
   fflush(stdout);             
 }
 #endif
 
 int main() {
-    printf("\033[?25l");
-
 #ifdef _WIN32
     setlocale(LC_ALL, ".UTF8");               
     system("chcp 65001 > nul");                 
@@ -102,6 +101,8 @@ int main() {
 #endif
 
     title_menu();
+
+    printf("\033[?25l");
 
     Stage* head = load_maps();
 
@@ -199,7 +200,6 @@ int main() {
                 clear();
                 printf("축하합니다! 모든 스테이지를 클리어했습니다!\n");
                 printf("최종 점수: %d\n", score);
-                printf("\033[?25h");
             }
         }
     }
@@ -210,7 +210,6 @@ int main() {
 
         printf("GAME OVER!\n");
         printf("최종 점수: %d\n", score);
-        printf("\033[?25h");
     }
 
     disable_raw_mode();
@@ -249,7 +248,6 @@ void title_menu() {
             continue;
         }
     }
-    clrscr();
     return;
 }
 
@@ -274,7 +272,7 @@ void enable_raw_mode(){ }
 
 // 현재 스테이지 초기화
 void init_stage(int height, int width, char** map) {
-
+    clrscr();
     enemy_count = 0;
     coin_count = 0;
     is_jumping = 0;
@@ -294,7 +292,6 @@ void init_stage(int height, int width, char** map) {
             }
         }
     }
-    clrscr();   
 }
 
 // 게임 화면 그리기
@@ -309,7 +306,7 @@ void draw_game(int height, int width, char** map) {
 
     for(int y=0; y < height; y++) {
         display_map[y] = malloc(sizeof(char) * (width + 1));
-        for(int x=0; x < width; x++) {
+        for(int x=0; x <= width; x++) {
             char cell = map[y][x];
             if (cell == 'S' || cell == 'X' || cell == 'C') {
                 display_map[y][x] = ' ';
@@ -332,9 +329,7 @@ void draw_game(int height, int width, char** map) {
     display_map[player_y][player_x] = 'P';
 
     for (int y = 0; y < height; y++) {
-        for(int x=0; x< width; x++){
-            printf("%c", display_map[y][x]);
-        }
+        printf("%s", display_map[y]);
         printf("\n");
     }
 }
@@ -396,7 +391,8 @@ void move_player(char input, int height, int width, char** map) {
 
             } 
             else if (velocity_y>0&&map[next_y][player_x]=='#'){
-                player_y;
+                velocity_y = 0;
+                is_jumping = 0;
             } 
             else if (next_y < height) {
 
