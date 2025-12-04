@@ -41,7 +41,7 @@
 #### (1) MinGW-w64 설치 후 컴파일
 
 ```bash
-gcc -std=c11 -Wall -Wextra -o nuguri.exe nuguri.c
+gcc -o nuguri.exe nuguri.c
 ```
 
 - `windows.h`, `conio.h`를 사용하며, `Beep`, `_kbhit`, `_getch` 등 Windows 콘솔 API를 통해 입력과 사운드를 처리한다.  
@@ -62,7 +62,7 @@ gcc -std=c11 -Wall -Wextra -o nuguri.exe nuguri.c
 #### (1) 컴파일
 
 ```bash
-gcc -std=c11 -Wall -Wextra -o nuguri nuguri.c
+gcc -o nuguri nuguri.c
 ```
 
 - `unistd.h`, `termios.h`, `fcntl.h`를 사용하여 **Raw 모드 + 비동기 입력(kbhit)**을 직접 구현한다.  
@@ -82,7 +82,7 @@ gcc -std=c11 -Wall -Wextra -o nuguri nuguri.c
 #### (1) 컴파일
 
 ```bash
-gcc -std=c11 -Wall -Wextra -o nuguri nuguri.c
+gcc -o nuguri nuguri.c
 ```
 
 - Linux와 동일하게 `termios` 기반 Raw 모드와 `kbhit()` 구현을 사용한다.
